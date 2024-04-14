@@ -42,6 +42,7 @@ export default function TavilyApiKeyInput({
     localStorage.setItem('tavilyApiKey', keyInput)
     alert('Tavily API key successfully updated.')
     router.refresh()
+    window.location.reload()
   }
 
   return (
