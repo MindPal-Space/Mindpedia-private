@@ -15,13 +15,16 @@ const description =
   '100% FREE AI-powered answer engine, alternative to Perplexity AI'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://search.mindpal.io'),
   title,
   description,
+  icons: {
+    icon: '/favicon.ico'
+  },
   openGraph: {
     title,
     description
-  }
+  },
+  metadataBase: new URL('https://search.mindpal.io')
 }
 
 export const viewport: Viewport = {
