@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import type { AI, UIStateItem } from '@/app/action'
 import { useUIState, useActions, useAIState } from 'ai/rsc'
-import { cn } from '@/lib/utils'
 import { UserMessage } from './user-message'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
@@ -9,6 +8,7 @@ import { ArrowRight, Plus } from 'lucide-react'
 import { EmptyScreen } from './empty-screen'
 import { nanoid } from 'ai'
 import { useThreadContext } from '@/app/_providers/ThreadContextProvider'
+import { ExternalLink } from './ui/external-link'
 
 export function ChatPanel() {
   const { openAiApiKeyInputBtnRef, tavilyApiKeyInputBtnRef } =
@@ -20,7 +20,6 @@ export function ChatPanel() {
   const { submit } = useActions<typeof AI>()
   const [isButtonPressed, setIsButtonPressed] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
-  const [showEmptyScreen, setShowEmptyScreen] = useState(false)
   // Focus on input when button is pressed
   useEffect(() => {
     if (isButtonPressed) {
@@ -112,7 +111,25 @@ export function ChatPanel() {
   return (
     <div className={formPositionClass}>
       {/* <IconKuroko className="w-6 h-6 mb-4" /> */}
-      <form onSubmit={handleSubmit} className="max-w-2xl w-full px-6">
+      <form
+        onSubmit={handleSubmit}
+        className="max-w-2xl w-full px-6 flex flex-col items-center gap-8"
+      >
+        <div className="flex flex-col items-center gap-6">
+          <h1 className="text-4xl md:text-5xl text-center font-semibold tracking-tight">
+            Ask Mindpedia anything
+          </h1>
+          <div className="text-sm flex flex-row items-center justify-end gap-x-3">
+            <p className="text-zinc-400">Brought to you by</p>
+            <ExternalLink href="https://mindpal.io/">MindPal</ExternalLink>
+            <ExternalLink href="https://everlearns.com/">
+              EverLearns
+            </ExternalLink>
+            <ExternalLink href="https://everlynai.com/">
+              Everlyn AI
+            </ExternalLink>
+          </div>
+        </div>
         <div className="relative flex items-center w-full">
           <Input
             ref={inputRef}
@@ -123,10 +140,7 @@ export function ChatPanel() {
             className="pl-4 pr-10 h-12 rounded-full bg-muted"
             onChange={e => {
               setInput(e.target.value)
-              setShowEmptyScreen(e.target.value.length === 0)
             }}
-            onFocus={() => setShowEmptyScreen(true)}
-            onBlur={() => setShowEmptyScreen(false)}
           />
           <Button
             type="submit"
@@ -142,7 +156,6 @@ export function ChatPanel() {
           submitMessage={message => {
             setInput(message)
           }}
-          className={cn(showEmptyScreen ? 'visible' : 'invisible')}
         />
       </form>
     </div>

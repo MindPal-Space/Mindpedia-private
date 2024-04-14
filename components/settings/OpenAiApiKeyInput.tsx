@@ -58,7 +58,12 @@ export default function OpenAiApiKeyInput({
         <DialogHeader>
           <DialogTitle>Manage your OpenAI API key</DialogTitle>
           <DialogDescription>
-            <div className="w-full mt-4 flex flex-col gap-2">
+            <div className="w-full mt-4 flex flex-col gap-4">
+              <p className="text-sm">
+                To help Mindpedia remain FREE FOREVER, we kindly ask you to use
+                your OpenAI API Key (for generating answers) to power your own
+                usage.
+              </p>
               <p className="text-sm">
                 Your API key is securely stored in your local browser.
               </p>
