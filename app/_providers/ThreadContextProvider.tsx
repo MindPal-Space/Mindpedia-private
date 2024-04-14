@@ -1,10 +1,19 @@
 'use client'
 
 import { Thread } from '@prisma/client'
-import { createContext, ReactNode, useContext, useMemo } from 'react'
+import {
+  createContext,
+  MutableRefObject,
+  ReactNode,
+  useContext,
+  useMemo,
+  useRef
+} from 'react'
 
 interface ThreadContextProps {
   threadData: Thread | null
+  openAiApiKeyInputBtnRef: MutableRefObject<HTMLButtonElement | null>
+  tavilyApiKeyInputBtnRef: MutableRefObject<HTMLButtonElement | null>
 }
 
 const ThreadContext = createContext<ThreadContextProps | undefined>(undefined)
@@ -28,11 +37,16 @@ export const ThreadContextProvider = ({
   threadData,
   children
 }: ThreadContextProviderProps) => {
+  const openAiApiKeyInputBtnRef = useRef<HTMLButtonElement | null>(null)
+  const tavilyApiKeyInputBtnRef = useRef<HTMLButtonElement | null>(null)
+
   const contextValue = useMemo(
     () => ({
-      threadData
+      threadData,
+      openAiApiKeyInputBtnRef,
+      tavilyApiKeyInputBtnRef
     }),
-    [threadData]
+    [threadData, openAiApiKeyInputBtnRef, tavilyApiKeyInputBtnRef]
   )
 
   return (

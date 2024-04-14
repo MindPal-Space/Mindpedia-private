@@ -8,8 +8,12 @@ import { Button } from './ui/button'
 import { ArrowRight, Plus } from 'lucide-react'
 import { EmptyScreen } from './empty-screen'
 import { nanoid } from 'ai'
+import { useThreadContext } from '@/app/_providers/ThreadContextProvider'
 
 export function ChatPanel() {
+  const { openAiApiKeyInputBtnRef, tavilyApiKeyInputBtnRef } =
+    useThreadContext()
+
   const [input, setInput] = useState('')
   const [messages, setMessages] = useUIState<typeof AI>()
   const [_, setAiMessages] = useAIState<typeof AI>()
@@ -27,6 +31,20 @@ export function ChatPanel() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+
+    // Control
+    const openAiApiKey = localStorage.getItem('openAiApiKey')
+    const tavilyApiKey = localStorage.getItem('tavilyApiKey')
+    if (!openAiApiKey) {
+      alert('Missing OpenAI API Key. Please input one to continue.')
+      openAiApiKeyInputBtnRef.current?.click()
+      return
+    }
+    if (!tavilyApiKey) {
+      alert('Missing Tavily API Key. Please input one to continue.')
+      tavilyApiKeyInputBtnRef.current?.click()
+      return
+    }
 
     // Clear messages if button is pressed
     if (isButtonPressed) {
@@ -46,7 +64,7 @@ export function ChatPanel() {
 
     // Submit and get response message
     const formData = new FormData(e.currentTarget)
-    const responseMessage = await submit(formData)
+    const responseMessage = await submit(openAiApiKey, tavilyApiKey, formData)
     setMessages((currentMessages: UIStateItem[]) => [
       ...currentMessages,
       responseMessage as any

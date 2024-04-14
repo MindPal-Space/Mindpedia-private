@@ -7,14 +7,31 @@ import { useActions, useUIState } from 'ai/rsc'
 import type { AI, UIStateItem } from '@/app/action'
 import { UserMessage } from './user-message'
 import { ArrowRight } from 'lucide-react'
+import { useThreadContext } from '@/app/_providers/ThreadContextProvider'
 
 export function FollowupPanel() {
+  const { openAiApiKeyInputBtnRef, tavilyApiKeyInputBtnRef } =
+    useThreadContext()
+
   const [input, setInput] = useState('')
   const { submit } = useActions<typeof AI>()
   const [, setMessages] = useUIState<typeof AI>()
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    // Control
+    const openAiApiKey = localStorage.getItem('openAiApiKey')
+    const tavilyApiKey = localStorage.getItem('tavilyApiKey')
+    if (!openAiApiKey) {
+      alert('Missing OpenAI API Key. Please input one to continue.')
+      openAiApiKeyInputBtnRef.current?.click()
+      return
+    }
+    if (!tavilyApiKey) {
+      alert('Missing Tavily API Key. Please input one to continue.')
+      tavilyApiKeyInputBtnRef.current?.click()
+      return
+    }
     const formData = new FormData(event.currentTarget as HTMLFormElement)
 
     const userMessage = {
@@ -25,7 +42,7 @@ export function FollowupPanel() {
       )
     }
 
-    const responseMessage = await submit(formData)
+    const responseMessage = await submit(openAiApiKey, tavilyApiKey, formData)
     setMessages((currentMessages: UIStateItem[]) => [
       ...currentMessages,
       userMessage,

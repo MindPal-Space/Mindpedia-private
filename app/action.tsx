@@ -12,7 +12,12 @@ import { Spinner } from '@/components/ui/spinner'
 import { inquire, researcher, taskManager, querySuggestor } from '@/lib/agents'
 import { Related } from '@/lib/schema/related'
 
-async function submit(formData?: FormData, skip?: boolean) {
+async function submit(
+  openAiApiKey: string,
+  tavilyApiKey: string,
+  formData?: FormData,
+  skip?: boolean
+) {
   'use server'
 
   const aiState = getMutableAIState<typeof AI>()
@@ -46,11 +51,19 @@ async function submit(formData?: FormData, skip?: boolean) {
 
     let action: any = { object: { next: 'proceed' } }
     // If the user skips the task, we proceed to the search
-    if (!skip) action = await taskManager(messages as ExperimentalMessage[])
+    if (!skip)
+      action = await taskManager(
+        openAiApiKey,
+        messages as ExperimentalMessage[]
+      )
 
     if (action.object.next === 'inquire') {
       // Generate inquiry
-      const inquiry = await inquire(uiStream, messages as ExperimentalMessage[])
+      const inquiry = await inquire(
+        openAiApiKey,
+        uiStream,
+        messages as ExperimentalMessage[]
+      )
 
       uiStream.done()
       isGenerating.done()
@@ -75,6 +88,8 @@ async function submit(formData?: FormData, skip?: boolean) {
     while (answer.length === 0) {
       // Search the web and generate the answer
       const { fullResponse, hasError } = await researcher(
+        openAiApiKey,
+        tavilyApiKey,
         aiState,
         uiStream,
         streamText,
@@ -95,6 +110,7 @@ async function submit(formData?: FormData, skip?: boolean) {
     if (!errorOccurred) {
       // Generate related queries
       const result = await querySuggestor(
+        openAiApiKey,
         uiStream,
         messages as ExperimentalMessage[]
       )

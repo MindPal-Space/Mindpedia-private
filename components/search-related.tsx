@@ -7,6 +7,7 @@ import { useActions, useStreamableValue, useUIState } from 'ai/rsc'
 import { AI, UIStateItem } from '@/app/action'
 import { UserMessage } from './user-message'
 import { PartialRelated, Related } from '@/lib/schema/related'
+import { useThreadContext } from '@/app/_providers/ThreadContextProvider'
 
 export interface SearchRelatedProps {
   relatedQueries: string | PartialRelated
@@ -15,6 +16,9 @@ export interface SearchRelatedProps {
 export const SearchRelated: React.FC<SearchRelatedProps> = ({
   relatedQueries
 }) => {
+  const { openAiApiKeyInputBtnRef, tavilyApiKeyInputBtnRef } =
+    useThreadContext()
+
   const { submit } = useActions<typeof AI>()
   const [, setMessages] = useUIState<typeof AI>()
   const [data, error, pending] = useStreamableValue<PartialRelated>(
@@ -23,6 +27,19 @@ export const SearchRelated: React.FC<SearchRelatedProps> = ({
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    // Control
+    const openAiApiKey = localStorage.getItem('openAiApiKey')
+    const tavilyApiKey = localStorage.getItem('tavilyApiKey')
+    if (!openAiApiKey) {
+      alert('Missing OpenAI API Key. Please input one to continue.')
+      openAiApiKeyInputBtnRef.current?.click()
+      return
+    }
+    if (!tavilyApiKey) {
+      alert('Missing Tavily API Key. Please input one to continue.')
+      tavilyApiKeyInputBtnRef.current?.click()
+      return
+    }
     const formData = new FormData(event.currentTarget as HTMLFormElement)
 
     // // Get the submitter of the form
@@ -42,7 +59,7 @@ export const SearchRelated: React.FC<SearchRelatedProps> = ({
       )
     }
 
-    const responseMessage = await submit(formData)
+    const responseMessage = await submit(openAiApiKey, tavilyApiKey, formData)
     setMessages((currentMessages: UIStateItem[]) => [
       ...currentMessages,
       userMessage,
