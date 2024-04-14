@@ -11,7 +11,6 @@ import { ExperimentalMessage, nanoid } from 'ai'
 import { Spinner } from '@/components/ui/spinner'
 import { inquire, researcher, taskManager, querySuggestor } from '@/lib/agents'
 import { Related } from '@/lib/schema/related'
-import { saveThreadData } from '@/server/prisma/actions'
 
 async function submit(formData?: FormData, skip?: boolean) {
   'use server'
@@ -153,13 +152,5 @@ export const AI: any = createAI<AIState, UIState>({
   // Each state can be any shape of object, but for chat applications
   // it makes sense to have an array of messages. Or you may prefer something like { id: number, messages: Message[] }
   initialUIState: [],
-  initialAIState: { chatId: nanoid(), messages: [] },
-  unstable_onSetAIState: async ({ state, done }) => {
-    if (done) {
-      await saveThreadData({
-        threadId: state.chatId.length > 12 ? state.chatId : null,
-        messages: state.messages
-      })
-    }
-  }
+  initialAIState: { chatId: nanoid(), messages: [] }
 })
