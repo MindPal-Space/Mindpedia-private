@@ -2,6 +2,7 @@
 
 import { AIStateMessage } from '@/app/action'
 import { prisma } from '.'
+import { indexSeoPage } from '../main/seo-index'
 
 export const saveThreadData = async ({
   threadId,
@@ -20,11 +21,15 @@ export const saveThreadData = async ({
       }
     })
   } else {
-    return prisma.thread.create({
+    const newThread = await prisma.thread.create({
       data: {
         title: messages[0].content,
         history: JSON.stringify(messages)
       }
     })
+    const result = await indexSeoPage(
+      `https://search.mindpal.io/${newThread.id}`
+    )
+    return newThread
   }
 }
