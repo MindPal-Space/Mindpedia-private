@@ -15,7 +15,10 @@ const description =
   '100% FREE AI-powered answer engine, alternative to Perplexity AI'
 
 export const metadata: Metadata = {
-  title,
+  title: {
+    default: title + ' | 100% FREE AI-powered answer engine',
+    template: `%s | ${title}`
+  },
   description,
   icons: {
     icon: '/favicon.ico'
