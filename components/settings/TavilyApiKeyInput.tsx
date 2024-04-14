@@ -60,6 +60,10 @@ export default function TavilyApiKeyInput({
           <DialogDescription>
             <div className="w-full mt-4 flex flex-col gap-2">
               <p className="text-sm">
+                To help Mindpedia remain FREE FOREVER, we kindly ask you to use
+                your Tavily API Key (for web search) to power your own usage.
+              </p>
+              <p className="text-sm">
                 Your API key is securely stored in your local browser.
               </p>
               {tavilyApiKey ? (

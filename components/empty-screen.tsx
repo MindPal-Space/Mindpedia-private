@@ -3,22 +3,31 @@ import { ArrowRight } from 'lucide-react'
 
 const exampleMessages = [
   {
-    heading: 'Why is Nvidia growing rapidly?',
-    message: 'Why is Nvidia growing rapidly?'
+    heading: 'What are the benefits of intermittent fasting?',
+    message: 'What are the benefits of intermittent fasting?'
   },
   {
-    heading: 'Is the Apple Vision Pro worth buying?',
-    message: 'Is the Apple Vision Pro worth buying?'
+    heading: 'How to start investing in cryptocurrency?',
+    message: 'How to start investing in cryptocurrency?'
   },
   {
-    heading: 'How does the Vercel AI SDK work?',
-    message: 'How does the Vercel AI SDK work?'
+    heading: 'Best home workout routines for beginners',
+    message: 'Best home workout routines for beginners'
   },
   {
-    heading: 'Tesla vs Rivian',
-    message: 'Tesla vs Rivian'
+    heading: 'Latest fashion trends for summer 2024',
+    message: 'Latest fashion trends for summer 2024'
+  },
+  {
+    heading: 'Benefits of mindfulness meditation',
+    message: 'Benefits of mindfulness meditation'
+  },
+  {
+    heading: 'Guide to sustainable gardening practices',
+    message: 'Guide to sustainable gardening practices'
   }
 ]
+
 export function EmptyScreen({
   submitMessage,
   className
@@ -29,7 +38,7 @@ export function EmptyScreen({
   return (
     <div className={`mx-auto w-full transition-all ${className}`}>
       <div className="bg-background p-2">
-        <div className="mt-4 flex flex-col items-start space-y-2 mb-4">
+        <div className="flex flex-col items-start space-y-2">
           {exampleMessages.map((message, index) => (
             <Button
               key={index}
