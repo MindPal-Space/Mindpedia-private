@@ -42,6 +42,7 @@ export default function OpenAiApiKeyInput({
     localStorage.setItem('openAiApiKey', keyInput)
     alert('OpenAI API key successfully updated.')
     router.refresh()
+    window.location.reload()
   }
 
   return (
