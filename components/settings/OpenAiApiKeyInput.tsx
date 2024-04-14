@@ -23,14 +23,15 @@ export default function OpenAiApiKeyInput({
   const router = useRouter()
 
   const [openAiApiKey, setOpenAiApiKey] = useState<string>('')
+  const [keyInput, setKeyInput] = useState<string>('')
   useEffect(() => {
     const savedOpenAiApiKey = localStorage.getItem('openAiApiKey')
     if (savedOpenAiApiKey) {
       setOpenAiApiKey(savedOpenAiApiKey)
+      setKeyInput(savedOpenAiApiKey)
     }
   }, [])
   const [keyEditable, setKeyEditable] = useState<boolean>(false)
-  const [keyInput, setKeyInput] = useState<string>(openAiApiKey || '')
 
   const handleInputKey = async () => {
     const isValidKey = await validateOpenAiApiKey(keyInput)
