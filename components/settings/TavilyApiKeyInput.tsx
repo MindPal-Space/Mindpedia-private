@@ -24,13 +24,14 @@ export default function TavilyApiKeyInput({
 
   const [tavilyApiKey, setTavilyApiKey] = useState<string>('')
   useEffect(() => {
-    const savedOpenAiApiKey = localStorage.getItem('tavilyApiKey')
-    if (savedOpenAiApiKey) {
-      setTavilyApiKey(savedOpenAiApiKey)
+    const savedTavilyApiKey = localStorage.getItem('tavilyApiKey')
+    if (savedTavilyApiKey) {
+      setTavilyApiKey(savedTavilyApiKey)
+      setKeyInput(savedTavilyApiKey)
     }
   }, [])
   const [keyEditable, setKeyEditable] = useState<boolean>(false)
-  const [keyInput, setKeyInput] = useState<string>(tavilyApiKey || '')
+  const [keyInput, setKeyInput] = useState<string>('')
 
   const handleInputKey = async () => {
     const isValidKey = await validateTavilyApiKey(keyInput)
