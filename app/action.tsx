@@ -1,3 +1,5 @@
+'use server'
+
 import {
   StreamableValue,
   createAI,
@@ -5,11 +7,10 @@ import {
   createStreamableValue,
   getMutableAIState
 } from 'ai/rsc'
-import { ExperimentalMessage } from 'ai'
+import { ExperimentalMessage, nanoid } from 'ai'
 import { Spinner } from '@/components/ui/spinner'
-import { Section } from '@/components/section'
-import { FollowupPanel } from '@/components/followup-panel'
 import { inquire, researcher, taskManager, querySuggestor } from '@/lib/agents'
+import { Related } from '@/lib/schema/related'
 
 async function submit(formData?: FormData, skip?: boolean) {
   'use server'
@@ -18,8 +19,10 @@ async function submit(formData?: FormData, skip?: boolean) {
   const uiStream = createStreamableUI()
   const isGenerating = createStreamableValue(true)
 
-  const messages: ExperimentalMessage[] = aiState.get() as any
+  const messages = (aiState.get() as AIState).messages
   // Get the user input from the form data
+  const inputType =
+    formData && !!formData.get('input') ? 'input' : skip ? 'action' : 'copilot'
   const userInput = skip
     ? `{"action": "skip"}`
     : (formData?.get('input') as string)
@@ -30,9 +33,12 @@ async function submit(formData?: FormData, skip?: boolean) {
     : null
   // Add the user message to the state
   if (content) {
-    const message = { role: 'user', content }
-    messages.push(message as ExperimentalMessage)
-    aiState.update([...(aiState.get() as any), message])
+    const message = { role: 'user', name: inputType, content }
+    messages.push(message as AIStateMessage)
+    aiState.update({
+      ...aiState.get(),
+      messages: [...(aiState.get() as AIState).messages, message]
+    })
   }
 
   async function processEvents() {
@@ -40,18 +46,25 @@ async function submit(formData?: FormData, skip?: boolean) {
 
     let action: any = { object: { next: 'proceed' } }
     // If the user skips the task, we proceed to the search
-    if (!skip) action = await taskManager(messages)
+    if (!skip) action = await taskManager(messages as ExperimentalMessage[])
 
     if (action.object.next === 'inquire') {
       // Generate inquiry
-      const inquiry = await inquire(uiStream, messages)
+      const inquiry = await inquire(uiStream, messages as ExperimentalMessage[])
 
       uiStream.done()
       isGenerating.done()
-      aiState.done([
+      aiState.done({
         ...aiState.get(),
-        { role: 'assistant', content: `inquiry: ${inquiry?.question}` }
-      ])
+        messages: [
+          ...(aiState.get() as AIState).messages,
+          {
+            role: 'assistant',
+            name: 'inquiry',
+            content: JSON.stringify(inquiry)
+          }
+        ]
+      })
       return
     }
 
@@ -62,30 +75,45 @@ async function submit(formData?: FormData, skip?: boolean) {
     while (answer.length === 0) {
       // Search the web and generate the answer
       const { fullResponse, hasError } = await researcher(
+        aiState,
         uiStream,
         streamText,
-        messages
+        messages as ExperimentalMessage[]
       )
       answer = fullResponse
       errorOccurred = hasError
     }
     streamText.done()
+    aiState.update({
+      ...aiState.get(),
+      messages: [
+        ...(aiState.get() as AIState).messages,
+        { role: 'assistant', name: 'answer', content: answer }
+      ]
+    })
 
     if (!errorOccurred) {
       // Generate related queries
-      await querySuggestor(uiStream, messages)
-
-      // Add follow-up panel
-      uiStream.append(
-        <Section title="Follow-up">
-          <FollowupPanel />
-        </Section>
+      const result = await querySuggestor(
+        uiStream,
+        messages as ExperimentalMessage[]
       )
+      aiState.update({
+        ...aiState.get(),
+        messages: [
+          ...(aiState.get() as AIState).messages,
+          {
+            role: 'assistant',
+            name: 'related',
+            content: JSON.stringify((result as { curr: Related }).curr)
+          }
+        ]
+      })
     }
 
     isGenerating.done(false)
     uiStream.done()
-    aiState.done([...aiState.get(), { role: 'assistant', content: answer }])
+    aiState.done(aiState.get())
   }
 
   processEvents()
@@ -97,28 +125,32 @@ async function submit(formData?: FormData, skip?: boolean) {
   }
 }
 
-// Define the initial state of the AI. It can be any JSON object.
-const initialAIState: {
+export interface AIStateMessage {
   role: 'user' | 'assistant' | 'system' | 'function' | 'tool'
   content: string
   id?: string
   name?: string
-}[] = []
+}
+export type AIState = {
+  chatId: string
+  messages: AIStateMessage[]
+}
 
 // The initial UI state that the client will keep track of, which contains the message IDs and their UI nodes.
-const initialUIState: {
-  id: number
-  isGenerating: StreamableValue<boolean>
+export interface UIStateItem {
+  id: string
+  isGenerating?: StreamableValue<boolean>
   component: React.ReactNode
-}[] = []
+}
+export type UIState = UIStateItem[]
 
 // AI is a provider you wrap your application with so you can access AI and UI state in your components.
-export const AI = createAI({
+export const AI: any = createAI<AIState, UIState>({
   actions: {
     submit
   },
   // Each state can be any shape of object, but for chat applications
   // it makes sense to have an array of messages. Or you may prefer something like { id: number, messages: Message[] }
-  initialUIState,
-  initialAIState
+  initialUIState: [],
+  initialAIState: { chatId: nanoid(), messages: [] }
 })

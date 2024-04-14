@@ -37,7 +37,7 @@ export async function querySuggestor(
 
     Aim to create queries that progressively delve into more specific aspects, implications, or adjacent topics related to the initial query. The goal is to anticipate the user's potential information needs and guide them towards a more comprehensive understanding of the subject matter.
     `,
-    messages,
+    prompt: JSON.stringify(messages),
     schema: relatedSchema
   })
     .then(async result => {
@@ -48,4 +48,6 @@ export async function querySuggestor(
     .finally(() => {
       objectStream.done()
     })
+
+  return objectStream.value
 }

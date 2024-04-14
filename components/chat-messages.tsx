@@ -1,13 +1,12 @@
-import { useUIState } from 'ai/rsc'
-import type { AI } from '@/app/action'
+import type { UIStateItem } from '@/app/action'
 
-export function ChatMessages() {
-  const [messages, setMessages] = useUIState<typeof AI>()
-
+export function ChatMessages({ messages }: { messages: UIStateItem[] }) {
   return (
     <>
-      {messages.map((message: { id: number; component: React.ReactNode }) => (
-        <div key={message.id}>{message.component}</div>
+      {messages.map((message: UIStateItem) => (
+        <div key={message.id} className="w-full">
+          {message.component}
+        </div>
       ))}
     </>
   )
