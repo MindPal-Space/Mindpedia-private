@@ -4,6 +4,7 @@ import { nextActionSchema } from '../schema/next-action'
 
 // Decide whether inquiry is required for the user input
 export async function taskManager(messages: ExperimentalMessage[]) {
+  console.log(messages)
   const openai = new OpenAI({
     baseUrl: process.env.OPENAI_API_BASE, // optional base URL for proxies etc.
     apiKey: process.env.OPENAI_API_KEY, // optional API key, default to env property OPENAI_API_KEY
@@ -21,7 +22,8 @@ export async function taskManager(messages: ExperimentalMessage[]) {
     However, if the user asks, "What's the best smartphone for my needs?", you may opt to "inquire" and present a form asking about their specific requirements, budget, and preferred features to provide a more tailored recommendation.
     Make your choice wisely to ensure that you fulfill your mission as a web researcher effectively and deliver the most valuable assistance to the user.
     `,
-    messages,
+    prompt: JSON.stringify(messages),
+    // messages,
     schema: nextActionSchema
   })
 

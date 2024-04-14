@@ -1,4 +1,8 @@
-import { createStreamableUI, createStreamableValue } from 'ai/rsc'
+import {
+  createStreamableUI,
+  createStreamableValue,
+  getMutableAIState
+} from 'ai/rsc'
 import {
   ExperimentalMessage,
   ToolCallPart,
@@ -15,8 +19,10 @@ import { BotMessage } from '@/components/message'
 import Exa from 'exa-js'
 import { SearchResultsImageSection } from '@/components/search-results-image'
 import { Card } from '@/components/ui/card'
+import { AIState } from '@/app/action'
 
 export async function researcher(
+  aiState: ReturnType<typeof getMutableAIState>,
   uiStream: ReturnType<typeof createStreamableUI>,
   streamText: ReturnType<typeof createStreamableValue<string>>,
   messages: ExperimentalMessage[]
@@ -46,7 +52,7 @@ export async function researcher(
     Aim to directly address the user's question, augmenting your response with insights gleaned from the search results.
     Whenever quoting or referencing information from a specific URL, always cite the source URL explicitly.
     `,
-    messages,
+    prompt: JSON.stringify(messages),
     tools: {
       search: {
         description: 'Search the web for information',
@@ -104,11 +110,38 @@ export async function researcher(
               />
             </Section>
           )
+          aiState.update({
+            ...aiState.get(),
+            messages: [
+              ...(aiState.get() as AIState).messages,
+              {
+                role: 'tool',
+                name: 'images',
+                content: JSON.stringify({
+                  images: searchResult.images,
+                  query: searchResult.query
+                })
+              }
+            ]
+          })
           uiStream.append(
             <Section title="Sources">
               <SearchResults results={searchResult.results} />
             </Section>
           )
+          aiState.update({
+            ...aiState.get(),
+            messages: [
+              ...(aiState.get() as AIState).messages,
+              {
+                role: 'tool',
+                name: 'sources',
+                content: JSON.stringify({
+                  results: searchResult.results
+                })
+              }
+            ]
+          })
 
           uiStream.append(answerSection)
 

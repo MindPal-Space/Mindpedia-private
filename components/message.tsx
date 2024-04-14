@@ -8,13 +8,23 @@ export function BotMessage({
 }: {
   content: string | StreamableValue<string>
 }) {
-  const [data, error, pending] = useStreamableValue(content)
+  const [data, error, pending] = useStreamableValue(
+    typeof content === 'string' ? undefined : content
+  )
+
+  if (typeof content === 'string') {
+    return (
+      <MemoizedReactMarkdown className="max-w-none prose prose-sm">
+        {content}
+      </MemoizedReactMarkdown>
+    )
+  }
 
   // Currently, sometimes error occurs after finishing the stream.
   if (error) return <div>Error</div>
 
   return (
-    <MemoizedReactMarkdown className="prose-sm prose-neutral prose-a:text-accent-foreground/50">
+    <MemoizedReactMarkdown className="max-w-none prose prose-sm">
       {data}
     </MemoizedReactMarkdown>
   )

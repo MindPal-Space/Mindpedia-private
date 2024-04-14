@@ -19,4 +19,5 @@ export const inquirySchema = z.object({
     .describe('The placeholder for the input field')
 })
 
+export type Inquiry = z.infer<typeof inquirySchema>
 export type PartialInquiry = DeepPartial<typeof inquirySchema>

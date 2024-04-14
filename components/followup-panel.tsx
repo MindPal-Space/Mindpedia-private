@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { useActions, useUIState } from 'ai/rsc'
-import type { AI } from '@/app/action'
+import type { AI, UIStateItem } from '@/app/action'
 import { UserMessage } from './user-message'
 import { ArrowRight } from 'lucide-react'
 
@@ -20,11 +20,13 @@ export function FollowupPanel() {
     const userMessage = {
       id: Date.now(),
       isGenerating: false,
-      component: <UserMessage message={input} isFirstMessage={false} />
+      component: (
+        <UserMessage name={undefined} message={input} isFirstMessage={false} />
+      )
     }
 
     const responseMessage = await submit(formData)
-    setMessages(currentMessages => [
+    setMessages((currentMessages: UIStateItem[]) => [
       ...currentMessages,
       userMessage,
       responseMessage

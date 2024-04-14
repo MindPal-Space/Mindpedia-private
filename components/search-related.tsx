@@ -4,12 +4,12 @@ import React from 'react'
 import { Button } from './ui/button'
 import { ArrowRight } from 'lucide-react'
 import { useActions, useStreamableValue, useUIState } from 'ai/rsc'
-import { AI } from '@/app/action'
+import { AI, UIStateItem } from '@/app/action'
 import { UserMessage } from './user-message'
-import { PartialRelated } from '@/lib/schema/related'
+import { PartialRelated, Related } from '@/lib/schema/related'
 
 export interface SearchRelatedProps {
-  relatedQueries: PartialRelated
+  relatedQueries: string | PartialRelated
 }
 
 export const SearchRelated: React.FC<SearchRelatedProps> = ({
@@ -17,8 +17,9 @@ export const SearchRelated: React.FC<SearchRelatedProps> = ({
 }) => {
   const { submit } = useActions<typeof AI>()
   const [, setMessages] = useUIState<typeof AI>()
-  const [data, error, pending] =
-    useStreamableValue<PartialRelated>(relatedQueries)
+  const [data, error, pending] = useStreamableValue<PartialRelated>(
+    typeof relatedQueries === 'string' ? undefined : relatedQueries
+  )
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -36,11 +37,13 @@ export const SearchRelated: React.FC<SearchRelatedProps> = ({
     const userMessage = {
       id: Date.now(),
       isGenerating: false,
-      component: <UserMessage message={query} isFirstMessage={false} />
+      component: (
+        <UserMessage name={undefined} message={query} isFirstMessage={false} />
+      )
     }
 
     const responseMessage = await submit(formData)
-    setMessages(currentMessages => [
+    setMessages((currentMessages: UIStateItem[]) => [
       ...currentMessages,
       userMessage,
       responseMessage
@@ -49,7 +52,10 @@ export const SearchRelated: React.FC<SearchRelatedProps> = ({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-wrap">
-      {data?.items
+      {(typeof relatedQueries === 'string'
+        ? (JSON.parse(relatedQueries) as Related)
+        : data
+      )?.items
         ?.filter(item => item?.query !== '')
         .map((item, index) => (
           <div className="flex items-start w-full" key={index}>

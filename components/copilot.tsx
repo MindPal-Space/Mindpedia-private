@@ -1,31 +1,51 @@
 'use client'
 
 import React, { useEffect, useState } from 'react'
-import { PartialInquiry } from '@/lib/schema/inquiry'
+import { Inquiry, PartialInquiry } from '@/lib/schema/inquiry'
 import { Input } from './ui/input'
 import { Checkbox } from './ui/checkbox'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { ArrowRight, Check, FastForward, Sparkles } from 'lucide-react'
-import { useActions, useStreamableValue, useUIState } from 'ai/rsc'
-import { AI } from '@/app/action'
+import { useActions, useAIState, useStreamableValue, useUIState } from 'ai/rsc'
+import { AI, AIState, UIStateItem } from '@/app/action'
 import { IconLogo } from './ui/icons'
 import { cn } from '@/lib/utils'
 
 export type CopilotProps = {
-  inquiry?: PartialInquiry
+  inquiry?: string | PartialInquiry
+  savedAnswer?: { [key: string]: any }
 }
 
-export const Copilot: React.FC<CopilotProps> = ({ inquiry }: CopilotProps) => {
-  const [completed, setCompleted] = useState(false)
-  const [query, setQuery] = useState('')
+export const Copilot: React.FC<CopilotProps> = ({
+  inquiry,
+  savedAnswer
+}: CopilotProps) => {
+  const [completed, setCompleted] = useState(savedAnswer ? true : false)
+  const [query, setQuery] = useState(
+    savedAnswer && savedAnswer.additional_query
+      ? savedAnswer.additional_query
+      : ''
+  )
   const [skipped, setSkipped] = useState(false)
-  const [data, error, pending] = useStreamableValue<PartialInquiry>(inquiry)
+  const [data, error, pending] = useStreamableValue<PartialInquiry>(
+    typeof inquiry === 'string' ? undefined : inquiry
+  )
   const [checkedOptions, setCheckedOptions] = useState<{
     [key: string]: boolean
-  }>({})
+  }>(
+    savedAnswer
+      ? Object.keys(savedAnswer)
+          .filter(key => key !== 'additional_query')
+          .reduce((obj, key) => {
+            ;(obj as { [key: string]: boolean })[key] = savedAnswer[key]
+            return obj
+          }, {})
+      : {}
+  )
   const [isButtonDisabled, setIsButtonDisabled] = useState(true)
-  const [messages, setMessages] = useUIState<typeof AI>()
+  const [_, setMessages] = useUIState<typeof AI>()
+  const [aiState, setAiState] = useAIState<typeof AI>()
   const { submit } = useActions<typeof AI>()
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -74,7 +94,24 @@ export const Copilot: React.FC<CopilotProps> = ({ inquiry }: CopilotProps) => {
       : new FormData(e.target as HTMLFormElement)
 
     const responseMessage = await submit(formData, skip)
-    setMessages(currentMessages => [...currentMessages, responseMessage])
+    const msgIdsToDelete = (aiState as AIState).messages
+      .filter(
+        m =>
+          m.role === 'assistant' &&
+          m.name === 'inquiry' &&
+          typeof m.id !== 'undefined'
+      )
+      .map(msg => msg.id)
+    setAiState({
+      ...aiState,
+      messages: (aiState as AIState).messages.filter(
+        m => !msgIdsToDelete.includes(m.id)
+      )
+    } as AIState)
+    setMessages((currentMessages: UIStateItem[]) => [
+      ...currentMessages.filter(m => !msgIdsToDelete.includes(m.id)),
+      responseMessage
+    ])
   }
 
   const handleSkip = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -118,12 +155,20 @@ export const Copilot: React.FC<CopilotProps> = ({ inquiry }: CopilotProps) => {
             className={cn('w-4 h-4 flex-shrink-0', { 'animate-spin': pending })}
           />
           <p className="text-lg text-foreground text-semibold ml-2">
-            {data?.question}
+            {
+              (typeof inquiry === 'string'
+                ? (JSON.parse(inquiry) as Inquiry)
+                : data
+              )?.question
+            }
           </p>
         </div>
         <form onSubmit={onFormSubmit}>
           <div className="flex flex-wrap justify-start mb-4">
-            {data?.options?.map((option, index) => (
+            {(typeof inquiry === 'string'
+              ? (JSON.parse(inquiry) as Inquiry)
+              : data
+            )?.options?.map((option, index) => (
               <div
                 key={`option-${index}`}
                 className="flex items-center space-x-1.5 mb-2"
@@ -144,17 +189,30 @@ export const Copilot: React.FC<CopilotProps> = ({ inquiry }: CopilotProps) => {
               </div>
             ))}
           </div>
-          {data?.allowsInput && (
+          {(typeof inquiry === 'string'
+            ? (JSON.parse(inquiry) as Inquiry)
+            : data
+          )?.allowsInput && (
             <div className="mb-6 flex flex-col space-y-2 text-sm">
               <label className="text-muted-foreground" htmlFor="query">
-                {data?.inputLabel}
+                {
+                  (typeof inquiry === 'string'
+                    ? (JSON.parse(inquiry) as Inquiry)
+                    : data
+                  )?.inputLabel
+                }
               </label>
               <Input
                 type="text"
                 name="additional_query"
                 className="w-full"
                 id="query"
-                placeholder={data?.inputPlaceholder}
+                placeholder={
+                  (typeof inquiry === 'string'
+                    ? (JSON.parse(inquiry) as Inquiry)
+                    : data
+                  )?.inputPlaceholder
+                }
                 value={query}
                 onChange={handleInputChange}
               />

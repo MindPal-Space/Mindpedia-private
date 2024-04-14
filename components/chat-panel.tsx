@@ -1,17 +1,18 @@
 import { useEffect, useState, useRef } from 'react'
-import type { AI } from '@/app/action'
+import type { AI, UIStateItem } from '@/app/action'
 import { useUIState, useActions, useAIState } from 'ai/rsc'
 import { cn } from '@/lib/utils'
 import { UserMessage } from './user-message'
 import { Input } from './ui/input'
 import { Button } from './ui/button'
-import { ArrowRight, Plus, Square } from 'lucide-react'
+import { ArrowRight, Plus } from 'lucide-react'
 import { EmptyScreen } from './empty-screen'
+import { nanoid } from 'ai'
 
 export function ChatPanel() {
   const [input, setInput] = useState('')
   const [messages, setMessages] = useUIState<typeof AI>()
-  const [aiMessages, setAiMessages] = useAIState<typeof AI>()
+  const [_, setAiMessages] = useAIState<typeof AI>()
   const { submit } = useActions<typeof AI>()
   const [isButtonPressed, setIsButtonPressed] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -34,19 +35,22 @@ export function ChatPanel() {
     }
 
     // Add user message to UI state
-    setMessages(currentMessages => [
+    setMessages((currentMessages: UIStateItem[]) => [
       ...currentMessages,
       {
         id: Date.now(),
         isGenerating: false,
-        component: <UserMessage message={input} />
+        component: <UserMessage name={undefined} message={input} />
       }
     ])
 
     // Submit and get response message
     const formData = new FormData(e.currentTarget)
     const responseMessage = await submit(formData)
-    setMessages(currentMessages => [...currentMessages, responseMessage as any])
+    setMessages((currentMessages: UIStateItem[]) => [
+      ...currentMessages,
+      responseMessage as any
+    ])
 
     setInput('')
   }
@@ -55,7 +59,7 @@ export function ChatPanel() {
   const handleClear = () => {
     setIsButtonPressed(true)
     setMessages([])
-    setAiMessages([])
+    setAiMessages({ chatId: nanoid(), messages: [] })
   }
 
   useEffect(() => {
