@@ -9,8 +9,7 @@ import { Card } from './ui/card'
 import { ArrowRight, Check, FastForward, Sparkles } from 'lucide-react'
 import { useActions, useAIState, useStreamableValue, useUIState } from 'ai/rsc'
 import { AI, AIState, UIStateItem } from '@/app/action'
-import { IconLogo } from './ui/icons'
-import { cn } from '@/lib/utils'
+import { useThreadContext } from '@/app/_providers/ThreadContextProvider'
 
 export type CopilotProps = {
   inquiry?: string | PartialInquiry
@@ -21,6 +20,9 @@ export const Copilot: React.FC<CopilotProps> = ({
   inquiry,
   savedAnswer
 }: CopilotProps) => {
+  const { openAiApiKeyInputBtnRef, tavilyApiKeyInputBtnRef } =
+    useThreadContext()
+
   const [completed, setCompleted] = useState(savedAnswer ? true : false)
   const [query, setQuery] = useState(
     savedAnswer && savedAnswer.additional_query
@@ -86,6 +88,21 @@ export const Copilot: React.FC<CopilotProps> = ({
     skip?: boolean
   ) => {
     e.preventDefault()
+
+    // Control
+    const openAiApiKey = localStorage.getItem('openAiApiKey')
+    const tavilyApiKey = localStorage.getItem('tavilyApiKey')
+    if (!openAiApiKey) {
+      alert('Missing OpenAI API Key. Please input one to continue.')
+      openAiApiKeyInputBtnRef.current?.click()
+      return
+    }
+    if (!tavilyApiKey) {
+      alert('Missing Tavily API Key. Please input one to continue.')
+      tavilyApiKeyInputBtnRef.current?.click()
+      return
+    }
+
     setCompleted(true)
     setSkipped(skip || false)
 
@@ -93,7 +110,12 @@ export const Copilot: React.FC<CopilotProps> = ({
       ? undefined
       : new FormData(e.target as HTMLFormElement)
 
-    const responseMessage = await submit(formData, skip)
+    const responseMessage = await submit(
+      openAiApiKey,
+      tavilyApiKey,
+      formData,
+      skip
+    )
     const msgIdsToDelete = (aiState as AIState).messages
       .filter(
         m =>
@@ -139,7 +161,6 @@ export const Copilot: React.FC<CopilotProps> = ({
     return (
       <Card className="p-3 md:p-4 w-full flex justify-between items-center">
         <div className="flex items-center space-x-2 flex-1 min-w-0">
-          <IconLogo className="w-4 h-4 flex-shrink-0" />
           <h5 className="text-muted-foreground text-xs truncate">
             {updatedQuery()}
           </h5>
@@ -151,10 +172,7 @@ export const Copilot: React.FC<CopilotProps> = ({
     return (
       <Card className="p-4 rounded-lg w-full mx-auto">
         <div className="flex items-center mb-4">
-          <IconLogo
-            className={cn('w-4 h-4 flex-shrink-0', { 'animate-spin': pending })}
-          />
-          <p className="text-lg text-foreground text-semibold ml-2">
+          <p className="text-lg text-foreground text-semibold">
             {
               (typeof inquiry === 'string'
                 ? (JSON.parse(inquiry) as Inquiry)

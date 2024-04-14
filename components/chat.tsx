@@ -95,7 +95,7 @@ export function Chat() {
   }, [aiState.messages])
 
   return (
-    <div className="px-8 md:px-12 pt-6 md:pt-8 pb-14 md:pb-24 max-w-3xl mx-auto flex flex-col space-y-3 md:space-y-4">
+    <div className="w-full px-8 md:px-12 pt-6 md:pt-8 pb-14 md:pb-24 max-w-3xl mx-auto flex flex-col space-y-3 md:space-y-4">
       <ChatMessages messages={messages} />
       {aiState.messages.length > 0 &&
         aiState.messages[aiState.messages.length - 1].role === 'assistant' &&

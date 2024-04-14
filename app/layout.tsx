@@ -4,31 +4,26 @@ import { AI } from './action'
 import './globals.css'
 import { cn } from '@/lib/utils'
 import { ThemeProvider } from '@/components/theme-provider'
-import Header from '@/components/header'
-import Footer from '@/components/footer'
 
 const fontSans = FontSans({
   subsets: ['latin'],
   variable: '--font-sans'
 })
 
-const title = 'Morphic'
+const title = 'Mindpedia'
 const description =
-  'A fully open-source AI-powered answer engine with a generative UI.'
+  '100% FREE AI-powered answer engine, alternative to Perplexity AI'
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://morphic.sh'),
+  metadataBase: new URL('https://search.mindpal.io'),
   title,
   description,
   openGraph: {
     title,
     description
   },
-  twitter: {
-    title,
-    description,
-    card: 'summary_large_image',
-    creator: '@miiura'
+  icons: {
+    icon: '/favicon.ico'
   }
 }
 
@@ -53,9 +48,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <Header />
           <AI>{children}</AI>
-          <Footer />
         </ThemeProvider>
       </body>
     </html>

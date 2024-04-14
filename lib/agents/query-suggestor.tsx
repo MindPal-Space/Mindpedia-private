@@ -6,13 +6,12 @@ import SearchRelated from '@/components/search-related'
 import { OpenAI } from 'ai/openai'
 
 export async function querySuggestor(
+  openAiApiKey: string,
   uiStream: ReturnType<typeof createStreamableUI>,
   messages: ExperimentalMessage[]
 ) {
   const openai = new OpenAI({
-    baseUrl: process.env.OPENAI_API_BASE, // optional base URL for proxies etc.
-    apiKey: process.env.OPENAI_API_KEY, // optional API key, default to env property OPENAI_API_KEY
-    organization: '' // optional organization
+    apiKey: openAiApiKey
   })
   const objectStream = createStreamableValue<PartialRelated>()
   uiStream.append(

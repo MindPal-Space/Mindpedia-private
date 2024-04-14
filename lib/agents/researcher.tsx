@@ -22,15 +22,15 @@ import { Card } from '@/components/ui/card'
 import { AIState } from '@/app/action'
 
 export async function researcher(
+  openAiApiKey: string,
+  tavilyApiKey: string,
   aiState: ReturnType<typeof getMutableAIState>,
   uiStream: ReturnType<typeof createStreamableUI>,
   streamText: ReturnType<typeof createStreamableValue<string>>,
   messages: ExperimentalMessage[]
 ) {
   const openai = new OpenAI({
-    baseUrl: process.env.OPENAI_API_BASE, // optional base URL for proxies etc.
-    apiKey: process.env.OPENAI_API_KEY, // optional API key, default to env property OPENAI_API_KEY
-    organization: '' // optional organization
+    apiKey: openAiApiKey
   })
 
   const searchAPI: 'tavily' | 'exa' = 'tavily'
@@ -85,7 +85,12 @@ export async function researcher(
           try {
             searchResult =
               searchAPI === 'tavily'
-                ? await tavilySearch(filledQuery, max_results, search_depth)
+                ? await tavilySearch(
+                    tavilyApiKey,
+                    filledQuery,
+                    max_results,
+                    search_depth
+                  )
                 : await exaSearch(query)
           } catch (error) {
             console.error('Search API error:', error)
@@ -193,18 +198,18 @@ export async function researcher(
 }
 
 async function tavilySearch(
+  tavilyApiKey: string,
   query: string,
   maxResults: number = 10,
   searchDepth: 'basic' | 'advanced' = 'basic'
 ): Promise<any> {
-  const apiKey = process.env.TAVILY_API_KEY
   const response = await fetch('https://api.tavily.com/search', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      api_key: apiKey,
+      api_key: tavilyApiKey,
       query,
       max_results: maxResults < 5 ? 5 : maxResults,
       search_depth: searchDepth,

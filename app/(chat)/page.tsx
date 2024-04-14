@@ -9,7 +9,7 @@ export default async function Page() {
     <ThreadContextProvider threadData={null}>
       <div className="w-full flex flex-col min-h-screen">
         <Header />
-        <main className="w-full flex flex-col flex-1 bg-muted/50 dark:bg-background">
+        <main className="w-full flex flex-col flex-1dark:bg-background">
           <AI
             initialAIState={{ chatId: nanoid(), messages: [] }}
             initialUIState={[]}
